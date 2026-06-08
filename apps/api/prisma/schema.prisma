@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BloodType {
+  O_NEG  @map("O-")
+  O_POS  @map("O+")
+  A_NEG  @map("A-")
+  A_POS  @map("A+")
+  B_NEG  @map("B-")
+  B_POS  @map("B+")
+  AB_NEG @map("AB-")
+  AB_POS @map("AB+")
+}
+
+enum Gender {
+  masculin
+  feminin
+}
+
+model User {
+  id               String    @id @default(uuid())
+  name             String
+  email            String    @unique
+  passwordHash     String?   @map("password_hash")
+  googleId         String?   @unique @map("google_id")
+  phone            String
+  city             String
+  bloodType        BloodType @map("blood_type")
+  gender           Gender
+  birthDate        DateTime  @map("birth_date")
+  avatarUrl        String?   @map("avatar_url")
+  reputationPoints Int       @default(0) @map("reputation_points")
+  lastDonationDate DateTime? @map("last_donation_date")
+  nextEligibleDate DateTime? @map("next_eligible_date")
+  isEligible       Boolean   @default(true) @map("is_eligible")
+  fcmToken         String?   @map("fcm_token")
+  refreshToken     String?   @map("refresh_token")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}

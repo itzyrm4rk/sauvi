@@ -1,0 +1,145 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgresql://sauvi_test:sauvi_test@localhost:5432/sauvi_test
+  REDIS_URL: redis://localhost:6379
+  JWT_SECRET: test-secret-minimum-32-chars-long
+  JWT_REFRESH_SECRET: test-refresh-secret-32-chars-long
+  GOOGLE_CLIENT_ID: test-google-client-id
+  GOOGLE_CLIENT_SECRET: test-google-client-secret
+  GOOGLE_CALLBACK_URL: http://localhost:3000/auth/google/callback
+  CLOUDFLARE_ACCOUNT_ID: test-account-id
+  CLOUDFLARE_R2_ACCESS_KEY: test-r2-access-key
+  CLOUDFLARE_R2_SECRET_KEY: test-r2-secret-key
+  CLOUDFLARE_R2_BUCKET_NAME: sauvi-media-test
+  CLOUDFLARE_CDN_URL: https://media.test.sauvi.app
+  FIREBASE_PROJECT_ID: sauvi-test
+  FIREBASE_CLIENT_EMAIL: test@sauvi-test.iam.gserviceaccount.com
+  FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n"
+  SENDGRID_API_KEY: SG.test-sendgrid-api-key
+  FROM_EMAIL: test@sauvi.app
+  FRONTEND_URL: exp://localhost:8081
+  NODE_ENV: test
+
+jobs:
+  quality:
+    name: Biome — Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Biome CI
+        run: npx biome ci .
+
+  test-api:
+    name: Tests API — NestJS
+    runs-on: ubuntu-latest
+    needs: quality
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sauvi_test
+          POSTGRES_PASSWORD: sauvi_test
+          POSTGRES_DB: sauvi_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        working-directory: apps/api
+
+      - name: Run Prisma migrations (test DB)
+        run: npx prisma migrate deploy
+        working-directory: apps/api
+
+      - name: Run unit tests
+        run: npm run test:ci
+        working-directory: apps/api
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          directory: apps/api/coverage
+          flags: api
+          fail_ci_if_error: false
+
+  build-api:
+    name: Build — NestJS TypeScript
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+        working-directory: apps/api
+      - run: npm run build
+        working-directory: apps/api
+
+  typecheck-mobile:
+    name: TypeCheck — React Native
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=@sauvi/shared
+      - run: npx tsc --noEmit
+        working-directory: apps/mobile
