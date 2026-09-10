@@ -19,7 +19,8 @@ export function Footer() {
               <span>SAUVI</span>
             </div>
             <p style={{ lineHeight: '1.6', fontSize: '0.9rem', color: '#94A3B8' }}>
-              Connecter les donneurs de sang compatibles avec les patients en situation d'urgence vitale au Cameroun.
+              Connecter les donneurs de sang compatibles avec les patients en situation d'urgence
+              vitale au Cameroun.
             </p>
           </div>
 

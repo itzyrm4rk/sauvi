@@ -83,7 +83,9 @@ export class FcmService {
       const err = error as { errorInfo?: { code?: string } };
       const isStale = err.errorInfo?.code ? STALE_TOKEN_ERROR_CODES.has(err.errorInfo.code) : false;
       if (isStale) {
-        this.logger.warn(`Token FCM périmé détecté (direct), suppression à effectuer: ${token.substring(0, 15)}...`);
+        this.logger.warn(
+          `Token FCM périmé détecté (direct), suppression à effectuer: ${token.substring(0, 15)}...`,
+        );
       }
       this.logger.error(`Erreur envoi FCM: ${(error as Error).message}`);
       return { successCount: 0, failureCount: 1, staleTokens: isStale ? [token] : [] };
@@ -151,7 +153,11 @@ export class FcmService {
         }
       }
 
-      return { successCount: response.successCount, failureCount: response.failureCount, staleTokens };
+      return {
+        successCount: response.successCount,
+        failureCount: response.failureCount,
+        staleTokens,
+      };
     } catch (error) {
       this.logger.error(`Erreur envoi FCM multicast: ${(error as Error).message}`);
       return { successCount: 0, failureCount: uniqueTokens.length, staleTokens: [] };

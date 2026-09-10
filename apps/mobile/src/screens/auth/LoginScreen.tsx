@@ -62,7 +62,8 @@ export function LoginScreen({ navigation }: Props): React.JSX.Element {
       } else if (apiErr?.status === 'FETCH_ERROR') {
         message = 'Impossible de joindre le serveur. Vérifiez votre connexion Wi-Fi.';
       } else if (apiErr?.status === 'PARSING_ERROR') {
-        message = 'Réponse inattendue du serveur. Vérifiez que votre téléphone est sur le même Wi-Fi.';
+        message =
+          'Réponse inattendue du serveur. Vérifiez que votre téléphone est sur le même Wi-Fi.';
       }
       Toast.show({
         type: 'error',

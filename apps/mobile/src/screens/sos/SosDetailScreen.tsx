@@ -607,9 +607,9 @@ export function SosDetailScreen(): React.JSX.Element {
                     <Text style={styles.stepNumberText}>1</Text>
                   </View>
                   <Text style={styles.stepText}>
-                    Votre groupe est compatible mais vous êtes en période de carence ({daysRemaining}{' '}
-                    jour{daysRemaining > 1 ? 's' : ''} restant{daysRemaining > 1 ? 's' : ''}). Vous
-                    ne pouvez pas donner pour l'instant.
+                    Votre groupe est compatible mais vous êtes en période de carence (
+                    {daysRemaining} jour{daysRemaining > 1 ? 's' : ''} restant
+                    {daysRemaining > 1 ? 's' : ''}). Vous ne pouvez pas donner pour l'instant.
                   </Text>
                 </View>
                 <View style={styles.stepItem}>
@@ -617,8 +617,8 @@ export function SosDetailScreen(): React.JSX.Element {
                     <Text style={styles.stepNumberText}>2</Text>
                   </View>
                   <Text style={styles.stepText}>
-                    Partagez cette alerte à vos proches — un contact compatible peut sauver cette vie
-                    à votre place !
+                    Partagez cette alerte à vos proches — un contact compatible peut sauver cette
+                    vie à votre place !
                   </Text>
                 </View>
                 <View style={styles.stepItem}>

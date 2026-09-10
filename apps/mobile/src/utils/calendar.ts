@@ -33,12 +33,7 @@ export async function openNativeCalendar(
     const dtStart = `${year}${month}${day}T090000`;
     const dtEnd = `${year}${month}${day}T100000`;
 
-    const googleCalendarUrl =
-      `https://calendar.google.com/calendar/r/eventedit` +
-      `?text=${encodeURIComponent(title)}` +
-      `&details=${encodeURIComponent(description)}` +
-      `&dates=${dtStart}/${dtEnd}` +
-      `&sf=true&output=xml`;
+    const googleCalendarUrl = `https://calendar.google.com/calendar/r/eventedit?text=${encodeURIComponent(title)}&details=${encodeURIComponent(description)}&dates=${dtStart}/${dtEnd}&sf=true&output=xml`;
 
     try {
       const canOpen = await Linking.canOpenURL(googleCalendarUrl).catch(() => false);
@@ -53,15 +48,7 @@ export async function openNativeCalendar(
     // ── Méthode 2 : Intent Android natif INSERT (Samsung, MIUI, AOSP Calendar…) ──
     const startTime = eventDate.getTime();
     const endTime = startTime + 60 * 60 * 1000;
-    const intentUrl =
-      `intent:#Intent` +
-      `;action=android.intent.action.INSERT` +
-      `;type=vnd.android.cursor.dir%2Fevent` +
-      `;S.title=${encodeURIComponent(title)}` +
-      `;S.description=${encodeURIComponent(description)}` +
-      `;l.beginTime=${startTime}` +
-      `;l.endTime=${endTime}` +
-      `;end`;
+    const intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir%2Fevent;S.title=${encodeURIComponent(title)};S.description=${encodeURIComponent(description)};l.beginTime=${startTime};l.endTime=${endTime};end`;
 
     try {
       await Linking.openURL(intentUrl);

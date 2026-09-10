@@ -8,4 +8,3 @@ import { ReputationService } from './reputation.service';
   exports: [ReputationService],
 })
 export class ReputationModule {}
-

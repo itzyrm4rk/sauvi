@@ -51,7 +51,10 @@ export function useFlyer() {
         // Fallback iOS natif si expo-sharing indisponible
         const { Share } = await import('react-native');
         await Share.share(
-          { url: flyerUri, message: "Téléchargez l'application SAUVI et sauvez des vies ! 👉 https://sauvi.app" },
+          {
+            url: flyerUri,
+            message: "Téléchargez l'application SAUVI et sauvez des vies ! 👉 https://sauvi.app",
+          },
           { dialogTitle: 'Partager le SOS SAUVI' },
         );
       } else {

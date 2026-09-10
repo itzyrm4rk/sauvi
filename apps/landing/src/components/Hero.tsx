@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  AlertCircleIcon,
-  ClockIcon,
-  DownloadIcon,
-  DropletsIcon,
-  ShieldCheckIcon,
-} from './Icons';
+import { AlertCircleIcon, ClockIcon, DownloadIcon, DropletsIcon, ShieldCheckIcon } from './Icons';
 
 export function Hero() {
   const apkDownloadUrl = process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL || '/downloads/sauvi-latest.apk';
@@ -111,7 +105,9 @@ export function Hero() {
                 Alerte SOS
               </span>
             </div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#E24B4A' }}>&lt; 15 min</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#E24B4A' }}>
+              &lt; 15 min
+            </div>
             <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
               Pour trouver un donneur proche
             </div>
