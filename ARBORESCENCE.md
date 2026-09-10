@@ -120,7 +120,7 @@ sauvi/
 │   │   │   │
 │   │   │   └── storage/
 │   │   │       ├── storage.module.ts
-│   │   │       └── cloudflare-r2.service.ts  ← Upload R2 via SDK S3
+│   │   │       └── supabase-storage.service.ts  ← Upload R2 via SDK S3
 │   │   │
 │   │   ├── prisma/
 │   │   │   ├── schema.prisma             ← Schéma Prisma complet
@@ -171,8 +171,8 @@ sauvi/
 │       │   │   │   ├── NavigationScreen.tsx       ← S-16
 │       │   │   │   └── DonationConfirmedScreen.tsx ← S-17
 │       │   │   ├── chat/
-│       │   │   │   ├── ChatScreen.tsx             ← S-18
-│       │   │   │   └── CallScreen.tsx             ← S-19
+│       │   │   │   └── ChatScreen.tsx             ← S-18
+│       │   │   │       (appel = deep link natif tel:, pas d'écran S-19 dédié)
 │       │   │   └── profile/
 │       │   │       ├── ProfileScreen.tsx          ← S-20
 │       │   │       ├── SettingsScreen.tsx         ← S-21
@@ -211,6 +211,7 @@ sauvi/
 │       │   │   ├── useFlyer.ts           ← ViewShot + expo-sharing
 │       │   │   ├── useLocation.ts        ← Expo Location
 │       │   │   ├── useNotifications.ts   ← Expo Notifications + FCM token
+│       │   │   ├── useNativeCall.ts      ← Linking.openURL('tel:...') — deep link natif
 │       │   │   └── useChat.ts            ← Socket.io chat
 │       │   │
 │       │   ├── store/
@@ -264,7 +265,8 @@ sauvi/
 │       │   │   └── index.ts              ← Barrel export
 │       │   └── constants/
 │       │       ├── blood-compatibility.ts
-│       │       └── cooldown-days.ts
+│       │       ├── cooldown-days.ts
+│       │       └── cities.ts              ← Les 10 villes du Cameroun (autocomplétion)
 │       ├── tsconfig.json
 │       └── package.json
 │
@@ -431,4 +433,67 @@ model Badge {
 
   @@map("badges")
 }
+
+model InAppNotification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  sosId     String?  @map("sos_id")
+  type      String   // "sos_match" (push reçu) | "sos_info" (non concerné, partage proposé)
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User      @relation(fields: [userId], references: [id])
+  sos       SosAlert? @relation(fields: [sosId], references: [id])
+
+  @@index([userId, read])
+  @@map("in_app_notifications")
+}
 ```
+
+> `InAppNotification` stocke TOUTES les notifications visibles dans le centre
+> de notifications (S-07), qu'elles aient déclenché un push FCM ou non.
+> - `type: "sos_match"` → l'utilisateur était compatible/éligible/même ville,
+>   un push FCM (token direct) a aussi été envoyé
+> - `type: "sos_info"` → l'utilisateur ne correspond pas aux critères du SOS
+>   (incompatible, en carence, ou autre ville) — uniquement visible in-app,
+>   avec un bouton de partage pour relayer l'alerte sur ses réseaux
+
+> ⚠️ Le champ `city` (sur `User` et `SosAlert`) doit être contraint côté backend
+> (Zod) et côté frontend (autocomplétion) à l'une des 10 villes définies dans
+> `packages/shared/src/constants/cities.ts` — voir ci-dessous.
+
+---
+
+## packages/shared/src/constants/cities.ts
+
+Liste fermée des villes couvertes par SAUVI, utilisée pour l'autocomplétion
+du champ ville à l'inscription (S-04) et lors de la création d'un SOS (S-10).
+
+```typescript
+// packages/shared/src/constants/cities.ts
+
+export const CAMEROON_CITIES = [
+  'Yaoundé',
+  'Douala',
+  'Garoua',
+  'Bamenda',
+  'Bafoussam',
+  'Bertoua',
+  'Ebolowa',
+  'Ngaoundéré',
+  'Buea',
+  'Maroua',
+] as const;
+
+export type City = (typeof CAMEROON_CITIES)[number];
+
+export const isValidCity = (value: string): value is City =>
+  CAMEROON_CITIES.includes(value as City);
+```
+
+> Liste fermée à 10 villes (volontairement non extensible côté client) —
+> le filtrage géographique des notifications SOS (compatibilité + ville +
+> éligibilité) dépend de cette liste exacte. Toute ville hors liste est
+> rejetée par le schema Zod côté NestJS (`z.enum(CAMEROON_CITIES)`).

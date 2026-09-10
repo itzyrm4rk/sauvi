@@ -40,7 +40,7 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", "dist", ".expo", "prisma/migrations", "coverage", ".turbo"]
+    "ignore": ["node_modules", "dist", ".expo", "prisma/migrations", "coverage", ".turbo", ".next"]
   },
   "overrides": [
     {

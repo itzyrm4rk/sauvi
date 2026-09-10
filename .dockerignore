@@ -1,0 +1,11 @@
+node_modules
+apps/mobile
+apps/landing
+apps/api/dist
+apps/api/.env
+.env
+.git
+.turbo
+.vscode
+.idea
+*.log

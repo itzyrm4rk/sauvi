@@ -1,4 +1,5 @@
 {
+  "$schema": "https://schema.expo.dev/app.json",
   "expo": {
     "name": "SAUVI",
     "slug": "sauvi",
@@ -11,25 +12,74 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F1EFE8"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.sauvi.mobile"
+      "bundleIdentifier": "app.sauvi.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "SAUVI a besoin de votre position pour trouver l'hôpital le plus proche lors de la création d'une alerte SOS."
+      }
     },
     "android": {
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
-        "backgroundColor": "#E24B4A",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
       },
-      "package": "app.sauvi.mobile"
+      "package": "app.sauvi.mobile",
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-font", "expo-secure-store"]
+    "plugins": [
+      "expo-dev-client",
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/adaptive-icon.png",
+          "color": "#E24B4A",
+          "defaultChannel": "sauvi-sos-channel",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          }
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "SAUVI a besoin de votre position pour identifier les hôpitaux à proximité."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f985ef6d-7eb3-40e9-8787-c75ce428df5d"
+      }
+    },
+    "owner": "marc2903",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f985ef6d-7eb3-40e9-8787-c75ce428df5d"
+    }
   }
 }

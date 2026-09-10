@@ -6,25 +6,56 @@ dist/
 build/
 *.tsbuildinfo
 
-# Environment
+# Next.js Landing
+apps/landing/.next/
+apps/landing/out/
+
+# Compiled TS output in source folders (should only exist in dist/)
+apps/api/src/**/*.js
+apps/api/src/**/*.d.ts
+apps/api/src/**/*.js.map
+packages/shared/src/**/*.js
+packages/shared/src/**/*.d.ts
+packages/shared/src/**/*.js.map
+packages/shared/dist/
+
+# Environment files
 .env
 .env.local
 .env.*.local
 apps/api/.env
+apps/mobile/.env
+apps/mobile/.env.*
+apps/landing/.env
+apps/landing/.env.*
 
 # Expo / React Native
 .expo/
 apps/mobile/.expo/
+.maestro/recordings/
 
-# Testing
+# Testing & Coverage
 coverage/
+apps/api/coverage/
 
-# IDE
+# Documentation markdown files
+*.md
+!README.md
+!DEPLOYMENT_GUIDE.md
+!ARBORESCENCE.md
+!PLAN_DE_ROUTE.md
+!SPRINTS.md
+!STACK_ET_SETUP.md
+!WORKFLOW_CURSOR.md
+!cursorrules.md
+
+# IDE & Editors
 .idea/
+.vscode/
 *.swp
 *.swo
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
@@ -32,9 +63,16 @@ Thumbs.db
 apps/api/prisma/*.db
 apps/api/prisma/*.db-journal
 
+# Temporary test files & Scratch
+test.png
+*.tmp
+
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Turbo
+# Turbo & Cache
 .turbo/
+.cache/

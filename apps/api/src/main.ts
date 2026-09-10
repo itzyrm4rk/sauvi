@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
@@ -22,8 +23,13 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin:
       nodeEnv === 'production'
-        ? ['https://sauvi.app']
-        : ['http://localhost:3000', 'http://localhost:8081'],
+        ? [
+            'https://sauvi.app',
+            'https://sauvi-landing.vercel.app',
+            configService.get('FRONTEND_URL', { infer: true }),
+            /\.vercel\.app$/,
+          ].filter(Boolean)
+        : true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     credentials: true,
   });
@@ -35,6 +41,8 @@ async function bootstrap(): Promise<void> {
     new PrismaValidationExceptionFilter(),
   );
 
+  app.useWebSocketAdapter(new IoAdapter(app));
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle('SAUVI API')
     .setDescription("API de l'application mobile de don de sang d'urgence")
@@ -45,7 +53,7 @@ async function bootstrap(): Promise<void> {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   logger.log(`SAUVI API démarrée sur le port ${port}`);
   logger.log(`Swagger disponible sur http://localhost:${port}/api/docs`);
 }

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, View, type ViewProps } from 'react-native';
 
 import { borderRadius, colors, spacing } from '../../constants/theme';
@@ -6,7 +7,7 @@ export interface CardProps extends ViewProps {
   padded?: boolean;
 }
 
-export function Card({
+export const Card = memo(function Card({
   children,
   padded = true,
   style,
@@ -17,7 +18,7 @@ export function Card({
       {children}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

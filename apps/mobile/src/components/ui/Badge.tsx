@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { borderRadius, colors, spacing, typography } from '../../constants/theme';
 
-type BadgeVariant = 'primary' | 'success' | 'warning' | 'info' | 'neutral';
+type BadgeVariant = 'primary' | 'success' | 'warning' | 'info' | 'neutral' | 'error';
 
 export interface BadgeProps {
   label: string;
@@ -13,11 +14,15 @@ const variantStyles: Record<BadgeVariant, { background: string; text: string }> 
   primary: { background: colors.primaryLight, text: colors.primaryDark },
   success: { background: '#E6F5EF', text: colors.success },
   warning: { background: '#FDF4E7', text: colors.warning },
+  error: { background: '#FEE2E2', text: colors.error },
   info: { background: '#E8F0FA', text: colors.info },
   neutral: { background: colors.background, text: colors.textSecondary },
 };
 
-export function Badge({ label, variant = 'neutral' }: BadgeProps): React.JSX.Element {
+export const Badge = memo(function Badge({
+  label,
+  variant = 'neutral',
+}: BadgeProps): React.JSX.Element {
   const palette = variantStyles[variant];
 
   return (
@@ -25,7 +30,7 @@ export function Badge({ label, variant = 'neutral' }: BadgeProps): React.JSX.Ele
       <Text style={[styles.label, { color: palette.text }]}>{label}</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   badge: {

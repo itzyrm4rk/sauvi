@@ -158,11 +158,7 @@
 
 ```json
 {
-  "sharp": "^0.34.0",
-  "@aws-sdk/client-s3": "^3.750.0",
-  "@aws-sdk/s3-request-presigner": "^3.750.0",
-  "multer": "^2.0.0",
-  "@types/multer": "^1.4.12"
+  "@supabase/supabase-js": "^2.47.0"
 }
 ```
 
@@ -277,7 +273,6 @@
 ```json
 {
   "react-native-view-shot": "^4.0.0",
-  "react-native-qrcode-svg": "^6.3.0",
   "react-native-svg": "~15.11.0"
 }
 ```
@@ -497,11 +492,9 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 GOOGLE_CALLBACK_URL="http://localhost:3000/auth/google/callback"
 
 # Cloudflare R2 (CDN avatars)
-CLOUDFLARE_ACCOUNT_ID="your-account-id"
-CLOUDFLARE_R2_ACCESS_KEY="your-r2-access-key"
-CLOUDFLARE_R2_SECRET_KEY="your-r2-secret-key"
-CLOUDFLARE_R2_BUCKET_NAME="sauvi-media"
-CLOUDFLARE_CDN_URL="https://media.sauvi.app"
+SUPABASE_URL="https://votre-projet.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="votre-service-role-key"
+# La DATABASE_URL Supabase est déjà présente — rien à ajouter
 
 # Firebase (FCM Push Notifications)
 FIREBASE_PROJECT_ID="sauvi-app"

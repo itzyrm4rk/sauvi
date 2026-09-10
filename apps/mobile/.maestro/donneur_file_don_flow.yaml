@@ -1,0 +1,67 @@
+appId: com.sauvi.app
+---
+# Test E2E : Flux Donneur — Login → Explorer → Rejoindre file → Attendre validation → Voir itinéraire
+# Mis à jour : libellés boutons et navigations alignés avec l'UI actuelle
+- launchApp
+- clearState
+
+# --- Onboarding ---
+- runFlow:
+    when:
+      visible: "Passer"
+    commands:
+      - tapOn: "Passer"
+
+# --- Login en tant que donneur ---
+- tapOn: "email@exemple.com"
+- inputText: "donneur@test.com"
+
+- tapOn: "••••••••"
+- inputText: "TestPass123!"
+
+- tapOn: "Se connecter"
+
+# --- Vérifier arrivée sur l'accueil ---
+- extendedWaitUntil:
+    visible: "Bonjour"
+    timeout: 10000
+
+# --- Naviguer vers l'Explorer ---
+- tapOn: "Explorer"
+
+# --- Trouver un SOS actif et le rejoindre ---
+# Il clique sur la première carte SOS disponible dans la liste
+- tapOn:
+    id: "sos-card-0"
+    optional: true
+
+# Le bouton d'inscription au SOS s'appelle "Rejoindre la liste d'attente"
+- extendedWaitUntil:
+    visible: "Rejoindre la liste d'attente"
+    timeout: 5000
+- tapOn: "Rejoindre la liste d'attente"
+
+# --- Vérifier qu'on est bien dans la file d'attente ---
+# L'écran DonorWaitlist affiche ce titre quand on est en attente
+- extendedWaitUntil:
+    visible: "Vous êtes dans la file d'attente"
+    timeout: 5000
+
+# Vérifier que le bouton d'annulation est accessible
+- assertVisible: "Annuler ma participation"
+
+# --- Navigation vers l'hôpital (si validé par le demandeur) ---
+# Ce step est optionnel : il dépend de la validation par le demandeur
+# Quand validé, le bouton "Voir l'itinéraire" apparaît
+- runFlow:
+    when:
+      visible: "Voir l'itinéraire"
+    commands:
+      - tapOn: "Voir l'itinéraire"
+
+# --- Optionnel : Contacter le demandeur ---
+- runFlow:
+    when:
+      visible: "Discuter avec le demandeur"
+    commands:
+      - tapOn: "Discuter avec le demandeur"

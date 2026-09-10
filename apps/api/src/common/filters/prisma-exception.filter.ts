@@ -30,8 +30,17 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     exception: Prisma.PrismaClientKnownRequestError,
   ): ConflictException | NotFoundException | InternalServerErrorException {
     switch (exception.code) {
-      case 'P2002':
+      case 'P2002': {
+        const target = exception.meta?.target as string[] | string | undefined;
+        const targetStr = Array.isArray(target) ? target.join(',') : String(target);
+        if (targetStr.includes('email')) {
+          return new ConflictException('Cet email est déjà utilisé');
+        }
+        if (targetStr.includes('phone')) {
+          return new ConflictException('Ce numéro de téléphone est déjà utilisé');
+        }
         return new ConflictException('Une ressource avec ces données existe déjà');
+      }
       case 'P2025':
         return new NotFoundException('Ressource introuvable');
       case 'P2003':

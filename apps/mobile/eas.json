@@ -7,15 +7,32 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
+      "android": {
+        "buildType": "apk"
+      },
       "ios": {
         "simulator": true
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "preview",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://10.53.199.163:3000/api/",
+        "EXPO_PUBLIC_GEOAPIFY_API_KEY": "f2e63bbcaf804443a6b85930d9756913"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://sauvi-api.onrender.com/api",
+        "EXPO_PUBLIC_GEOAPIFY_API_KEY": "f2e63bbcaf804443a6b85930d9756913"
+      }
     }
   },
   "submit": {

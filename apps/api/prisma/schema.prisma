@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum BloodType {
@@ -23,13 +24,54 @@ enum Gender {
   feminin
 }
 
+enum Priority {
+  preventif
+  urgence_vitale
+}
+
+enum SosStatus {
+  active
+  closed
+  fulfilled
+  expired
+}
+
+enum WaitlistStatus {
+  waiting
+  validated
+  donated
+  cancelled
+  rejected
+}
+
+enum BadgeType {
+  bronze
+  argent
+  or
+  diamant
+  legende
+}
+
+enum NotificationType {
+  sos_share
+  sos_match
+  sos_expired
+  donor_joined
+  donor_cancelled
+  donor_validated
+  donation_confirmed
+  eligibility_restored
+  chat_message
+  badge_unlocked
+}
+
 model User {
   id               String    @id @default(uuid())
   name             String
   email            String    @unique
   passwordHash     String?   @map("password_hash")
   googleId         String?   @unique @map("google_id")
-  phone            String
+  phone            String    @unique
   city             String
   bloodType        BloodType @map("blood_type")
   gender           Gender
@@ -44,5 +86,108 @@ model User {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
+  sosAlerts        SosAlert[]          @relation("RequesterSos")
+  notifications    InAppNotification[]
+  waitlistEntries  DonorWaitlist[]
+  sentMessages     Message[]           @relation("SentMessages")
+  receivedMessages Message[]           @relation("ReceivedMessages")
+  badges           Badge[]
+
   @@map("users")
+}
+
+model InAppNotification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  sosId     String?          @map("sos_id")
+  type      NotificationType @default(sos_share)
+  title     String
+  body      String
+  shareUrl  String?          @map("share_url")
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sos       SosAlert?        @relation(fields: [sosId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([sosId])
+  @@map("in_app_notifications")
+}
+
+model SosAlert {
+  id              String    @id @default(uuid())
+  requesterId     String    @map("requester_id")
+  bloodTypeNeeded BloodType @map("blood_type_needed")
+  unitsNeeded     Int       @map("units_needed")
+  priority        Priority
+  hospitalName    String    @map("hospital_name")
+  hospitalAddress String    @map("hospital_address")
+  latitude        Decimal   @db.Decimal(10, 7)
+  longitude       Decimal   @db.Decimal(10, 7)
+  city            String
+  status          SosStatus @default(active)
+  expiresAt       DateTime? @map("expires_at")
+  closedAt        DateTime? @map("closed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  requester       User                @relation("RequesterSos", fields: [requesterId], references: [id], onDelete: Cascade)
+  notifications   InAppNotification[]
+  waitlist        DonorWaitlist[]
+  messages        Message[]
+
+  @@index([requesterId, status])
+  @@index([city, status])
+  @@index([status, expiresAt])
+  @@map("sos_alerts")
+}
+
+model DonorWaitlist {
+  id          String         @id @default(uuid())
+  sosId       String         @map("sos_id")
+  donorId     String         @map("donor_id")
+  status      WaitlistStatus @default(waiting)
+  joinedAt    DateTime       @default(now()) @map("joined_at")
+  validatedAt DateTime?      @map("validated_at")
+  donatedAt   DateTime?      @map("donated_at")
+
+  latitude    Float?
+  longitude   Float?
+
+  sos         SosAlert @relation(fields: [sosId], references: [id])
+  donor       User     @relation(fields: [donorId], references: [id])
+
+  @@unique([sosId, donorId])
+  @@index([donorId, status])
+  @@map("donor_waitlist")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  sosId      String   @map("sos_id")
+  senderId   String   @map("sender_id")
+  receiverId String   @map("receiver_id")
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sos      SosAlert @relation(fields: [sosId], references: [id])
+  sender   User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([sosId, createdAt])
+  @@index([receiverId])
+  @@map("messages")
+}
+
+model Badge {
+  id       String    @id @default(uuid())
+  userId   String    @map("user_id")
+  type     BadgeType
+  earnedAt DateTime  @default(now()) @map("earned_at")
+
+  user     User @relation(fields: [userId], references: [id])
+
+  @@map("badges")
 }

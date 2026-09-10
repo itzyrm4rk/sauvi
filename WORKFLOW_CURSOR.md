@@ -81,7 +81,7 @@ sauvi/
     │   ├── S-16-navigation.png
     │   ├── S-17-donation-confirmed.png
     │   ├── S-18-chat.png
-    │   ├── S-19-call.png
+    │   ├── S-19-call.png              ← NON utilisé (appel = deep link natif tel:, voir note)
     │   ├── S-20-profile.png
     │   ├── S-21-settings.png
     │   ├── S-22-eligibility.png
@@ -93,6 +93,12 @@ sauvi/
     ├── design-system.html        ← Fichier HTML exporté de Stitch
     └── tokens.json               ← Tokens Design System (si dispo)
 ```
+
+> ⚠️ **S-19 (écran appel sortant)** : maquette conservée pour référence visuelle
+> mais **non implémentée** comme écran in-app. Tous les boutons d'appel de SAUVI
+> utilisent le **deep link natif** `tel:` (via `Linking.openURL` et le hook
+> `useNativeCall`), qui ouvre l'application Téléphone native du système.
+> Aucun écran custom d'appel (numéro masqué, minuteur) n'est développé.
 
 ### Étape 6 : Créer le fichier theme.ts depuis les tokens Stitch
 
@@ -300,7 +306,7 @@ Génère dans l'ordre :
    react-native-gesture-handler ~2.21.0, react-native-screens ~4.16.0,
    react-native-safe-area-context ~5.4.0,
    react-native-maps ~1.20.0, react-native-view-shot ^4.0.0,
-   react-native-qrcode-svg ^6.3.0, react-native-svg ~15.11.0,
+   react-native-svg ~15.11.0,
    socket.io-client ^4.8.0, react-hook-form ^7.54.0, zod ^3.24.0,
    axios ^1.7.0, dayjs ^1.11.13)
 

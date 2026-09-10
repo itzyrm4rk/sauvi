@@ -256,10 +256,10 @@ SCEN-PROFIL-01 : Voir son profil
   THEN il reçoit son profil complet (sans password_hash)
 
 SCEN-PROFIL-02 : Modifier son avatar
-  GIVEN un utilisateur connecté
   WHEN il POST /users/me/avatar avec une image JPEG/PNG < 5MB
-  THEN l'image est convertie en WebP, uploadée sur Cloudflare R2,
-       et avatar_url est mis à jour dans la DB
+THEN l'image est uploadée dans Supabase Storage (bucket "avatars"),
+     l'URL CDN publique est stockée dans avatar_url en DB
+     (redimensionnement via paramètres URL Supabase, pas de conversion manuelle)
 
 SCEN-PROFIL-03 : Vérifier l'éligibilité
   GIVEN un utilisateur dont next_eligible_date est dans le passé
@@ -288,10 +288,12 @@ TASK-S3-B01 : Module users/ complet
   GET  /users/me/eligibility
   PATCH /users/me/fcm-token
 
-TASK-S3-B02 : CloudflareR2Service (storage/)
-  - Upload fichier Buffer vers R2
-  - Conversion WebP avec sharp avant upload
-  - Retourne URL CDN publique
+TASK-S3-B02 : SupabaseStorageService (storage/)
+  - Upload fichier Buffer vers Supabase Storage (bucket "avatars", accès public)
+  - Utilise @supabase/supabase-js (déjà présent pour la DB)
+  - Retourne URL CDN publique Supabase
+  - Pas de conversion manuelle — transformations via paramètres URL CDN
+    (?width=200&quality=80) appliqués à la lecture, pas à l'écriture
 
 TASK-S3-B03 : EligibilityService (eligibility/)
   - calculateNextEligibleDate(gender, lastDonationDate)
@@ -341,26 +343,43 @@ SCEN-SOS-01 : Créer un SOS Urgence vitale
        priority: "urgence_vitale", hospitalName: "CHU Laquintinie",
        city: "Douala", latitude: 4.05, longitude: 9.7 }
   THEN un SOS est créé avec status: "active"
-       ET une notification push est envoyée à tous les donneurs compatibles
-       (O-, O+, A-, A+) de la ville "Douala" qui sont éligibles
+       ET une notification PUSH FCM (token direct) est envoyée à tous les
+       donneurs compatibles (O-, O+, A-, A+) de la ville "Douala" qui sont éligibles
+       ET une notification IN-APP (non push) est créée pour tous les autres
+       utilisateurs (non compatibles, en carence, ou d'une autre ville)
 
 SCEN-SOS-02 : Blocage double SOS
   GIVEN un utilisateur avec un SOS status: "active"
   WHEN il POST /sos
   THEN il reçoit 409 Conflict { error: { code: "SOS_ALREADY_ACTIVE" } }
 
-SCEN-SOS-03 : Filtrage notifications
+SCEN-SOS-03 : Filtrage notifications PUSH (token direct, sans topic)
   GIVEN un SOS pour groupe A+ à Douala
-  WHEN les notifications sont envoyées
-  THEN les donneurs O-, O+, A-, A+ de Douala sont notifiés
-       ET les donneurs B+, B-, AB-, AB+ ne sont PAS notifiés
-       ET les donneurs en carence ne sont PAS notifiés
+  WHEN les notifications PUSH sont envoyées
+  THEN les donneurs O-, O+, A-, A+ de Douala éligibles sont notifiés en PUSH
+       (envoi par token FCM individuel, filtrage SQL fait en amont :
+       compatibilité ABO + ville + is_eligible)
+       ET les donneurs B+, B-, AB-, AB+ ne reçoivent PAS de push
+       ET les donneurs en carence ne reçoivent PAS de push
+       ET les donneurs d'une autre ville ne reçoivent PAS de push
+
+SCEN-SOS-03B : Notification in-app pour les donneurs non concernés
+  GIVEN un SOS créé pour groupe A+ à Douala
+  WHEN un utilisateur B- vivant à Yaoundé (incompatible + autre ville)
+       ou un donneur A+ de Douala actuellement en carence (compatible mais inéligible)
+       ouvre son centre de notifications (S-07)
+  THEN il voit une notification de type "info" (pas de push reçu) :
+       "Un SOS [groupe] est actif à [ville] — vous ne pouvez pas donner
+       actuellement, mais vous pouvez partager l'alerte"
+       ET un bouton "Partager" est visible directement sur cette notification
+       (réutilise la logique expo-sharing du flyer, sans passer par l'écran S-13)
 
 SCEN-SOS-04 : GPS refusé
   GIVEN un utilisateur qui refuse les permissions de localisation
   WHEN il arrive sur l'étape 2 de création du SOS
   THEN un message "Localisation refusée" s'affiche
-       ET un champ de recherche manuelle d'hôpital est proposé
+       ET un champ de recherche manuelle d'hôpital est proposé utilisant l'API Geoapify
+       (recherche restreinte uniquement au Cameroun, la ville doit correspondre aux villes supportées)
 
 SCEN-SOS-05 : Avertissement 0 donneur
   GIVEN un SOS pour groupe O- à Bafoussam où aucun donneur éligible
@@ -388,14 +407,25 @@ TASK-S4-B02 : Module sos/ complet
   GET  /sos/:id                → détail d'un SOS
   DELETE /sos/:id              → clôturer un SOS
   GET  /sos/nearby?city=Douala → liste SOS actifs de la ville
+  Validation Zod : city doit appartenir à CAMEROON_CITIES (packages/shared)
 
 TASK-S4-B03 : Module notifications/
   - FCMService : sendToDevice(token, payload), sendToMany(tokens, payload)
-  - NotificationService : findEligibleDonors(sos) + envoyer les notifs
+    → Approche TOKEN DIRECT uniquement (pas de Topic FCM).
+    Le filtrage (ville + compatibilité ABO + éligibilité) est entièrement
+    fait en SQL via Prisma AVANT l'envoi, puis multicast sur les tokens résultants.
+  - NotificationService :
+    - findEligibleDonors(sos) → utilisateurs compatibles + ville + éligibles
+      → reçoivent un push FCM (token direct)
+    - findNonMatchingUsers(sos) → tous les autres utilisateurs actifs
+      → reçoivent uniquement une notification IN-APP (pas de push),
+      stockée en DB et visible dans le centre de notifications (S-07)
+      avec un bouton de partage
   - Endpoint : POST /users/me/fcm-token (save token)
 
 TASK-S4-B04 : Tests d'intégration SOS
-  - POST /sos → notifs envoyées aux bons donneurs
+  - POST /sos → notifs PUSH envoyées aux bons donneurs (token direct)
+  - POST /sos → notifs IN-APP créées pour les utilisateurs non concernés
   - POST /sos → 409 si SOS déjà actif
 ```
 
@@ -411,9 +441,9 @@ TASK-S4-M01 : Écran SOS étape 1 (S-09)
 
 TASK-S4-M02 : Écran SOS étape 2 — Localisation (S-10)
   - Demande permission GPS (expo-location)
-  - Map preview avec pin (React Native Maps)
-  - Nom hôpital auto-détecté avec checkmark vert
-  - Champ recherche manuelle (fallback si GPS refusé)
+  - Map preview avec pin (React Native Maps configuré avec le provider Google Maps pour Android et iOS)
+  - Nom hôpital auto-détecté avec checkmark vert (recherche automatique via l'API Overpass)
+  - Champ recherche manuelle (fallback si GPS refusé) utilisant Geoapify (recherche restreinte uniquement au Cameroun)
   - CTA "Confirmer la localisation"
 
 TASK-S4-M03 : Écran Confirmation SOS (S-11)
@@ -451,28 +481,40 @@ SCEN-DONOR-02 : Famille valide un donneur
   THEN le donneur reçoit une notification push "Vous avez été sélectionné"
        ET le donneur voit l'itinéraire vers l'hôpital
        ET le numéro de la famille est accessible
+       ET un accès direct au chat et à l'appel est disponible pour les deux parties
 
-SCEN-DONOR-03 : Donneur confirme son don
-  GIVEN un donneur avec status "validated"
-  WHEN il POST /sos/:id/waitlist/:donorId/confirm-donation
-  THEN son status passe à "donated"
-       ET last_donation_date = now()
-       ET next_eligible_date = now() + délai selon genre et type
-       ET is_eligible = false
-       ET +50 points de réputation ajoutés (transaction atomique)
-       ET la famille reçoit une notification "Don confirmé !"
+SCEN-DONOR-03 : Famille confirme le don (et non le donneur)
+  GIVEN un donneur avec status "validated" qui s'est rendu à l'hôpital
+  WHEN la famille (PAS le donneur) PATCH /sos/:id/waitlist/:donorId
+       { status: "donated" }
+  THEN le status du donneur passe à "donated"
+       ET last_donation_date = now() pour ce donneur
+       ET next_eligible_date = now() + délai selon le genre du donneur
+       ET is_eligible = false pour ce donneur
+       ET +50 points de réputation ajoutés au donneur (transaction atomique)
+       ET le donneur reçoit une notification "Don confirmé par la famille !"
+       → C'est TOUJOURS la famille (demandeur) qui confirme la réalisation du don,
+       jamais le donneur lui-même. Cela évite qu'un donneur s'auto-déclare
+       sans que le don ait réellement eu lieu.
 
-SCEN-DONOR-04 : Donneur annule sa participation
-  GIVEN un donneur avec status "waiting"
+SCEN-DONOR-04 : Donneur annule sa participation (à tout moment avant le don)
+  GIVEN un donneur avec status "waiting" OU status "validated"
   WHEN il DELETE /sos/:id/waitlist
   THEN son status passe à "cancelled"
        ET la liste de la famille est mise à jour en temps réel
+       → L'annulation reste possible même après validation par la famille,
+       tant que le don n'a pas été confirmé (status "donated").
+       Une fois status "donated", l'annulation n'est plus possible
+       (le don a déjà eu lieu).
+       Si le donneur annule après avoir été "validated", la famille
+       reçoit une notification "Le donneur a annulé sa participation"
+       afin qu'elle puisse rouvrir la recherche.
 
 SCEN-DONOR-05 : Clôture du SOS
   GIVEN une famille avec un SOS status "active"
   WHEN elle DELETE /sos/:id
   THEN le SOS passe à status "closed"
-       ET tous les donneurs "waiting" reçoivent "Ce SOS est clôturé"
+       ET tous les donneurs "waiting" ou "validated" reçoivent "Ce SOS est clôturé"
        ET l'event WebSocket "sos:closed" est émis
 
 SCEN-DONOR-06 : WebSocket temps réel
@@ -485,10 +527,14 @@ SCEN-DONOR-06 : WebSocket temps réel
 
 ```
 TASK-S5-B01 : Module donors/ complet
-  POST   /sos/:id/waitlist                              → rejoindre
-  DELETE /sos/:id/waitlist                              → quitter
-  PATCH  /sos/:id/waitlist/:donorId                     → valider/refuser
-  POST   /sos/:id/waitlist/:donorId/confirm-donation    → confirmer don
+  POST   /sos/:id/waitlist                              → rejoindre (donneur)
+  DELETE /sos/:id/waitlist                              → annuler sa participation
+                                                            (donneur — possible en
+                                                            status waiting OU validated,
+                                                            impossible si déjà "donated")
+  PATCH  /sos/:id/waitlist/:donorId                     → valider/confirmer don
+                                                            (famille uniquement — statut
+                                                            "validated" puis "donated")
   GET    /sos/:id/waitlist                              → liste d'attente
 
 TASK-S5-B02 : ChatGateway (NestJS WebSocket Gateway)
@@ -504,7 +550,8 @@ TASK-S5-B03 : Calcul carence dans EligibilityService
   - Calcule next_eligible_date : masculin=56j, feminin=84j (sang total uniquement)
   - gender est récupéré depuis le profil utilisateur (enregistré à l'inscription)
   - Met à jour is_eligible = false
-  - Déclenche après confirm-donation
+  - Déclenche quand la FAMILLE confirme le don (PATCH status "donated"),
+    jamais à l'initiative du donneur
 
 TASK-S5-B04 : Système réputation (reputation/)
   - addPoints(userId, action: ReputationAction) — transaction Prisma atomique
@@ -518,16 +565,24 @@ TASK-S5-B04 : Système réputation (reputation/)
 ```
 TASK-S5-M01 : Écran Dashboard SOS actif (S-12)
   - Header "SOS ACTIF" badge rouge + bouton clôturer
-  - Tabs : "En attente" · "Validés" · "Refusés"
-  - DonorCard : avatar initiales, nom, groupe, distance, badge éligibilité
-  - Swipe right → valider, swipe left → refuser (react-native-gesture-handler)
+  - Tabs : "En attente" · "Validés" 
+  - Tab "En attente" : DonorCard avec avatar, nom, groupe, distance, badge éligibilité
+    Swipe right → valider (react-native-gesture-handler)
+  - Tab "Validés" : DonorCard enrichie avec DEUX boutons d'action directs :
+    → Bouton "Appeler" (icône téléphone) — ouvre le deep link natif tel:
+    → Bouton "Chat" (icône bulle) — navigue vers l'écran Chat (S-18) pour ce donneur
+    → Bouton "Confirmer le don" (vert, visible uniquement ici) — la famille
+      déclenche PATCH status "donated" une fois le don réellement effectué
   - Bouton "Partager le flyer" (navigue vers S-13)
   - Connexion WebSocket → mise à jour temps réel liste
+  - Si un donneur "validated" annule sa participation → notification immédiate
+    "Le donneur a annulé" + retour automatique en haut de la liste "En attente" vide
 
 TASK-S5-M02 : Écran Détail alerte SOS (S-14)
   - Groupe sanguin en 48px bold rouge
   - Badge priorité (rouge/ambre)
-  - Nom hôpital + adresse + distance
+  - Nom hôpital + adresse + distance + nombre de poche
+  - Description courte note de compatibilité 
   - Compteur "X donneurs déjà en attente"
   - CTA "Rejoindre la liste d'attente" (vert) ou "En carence" (grisé)
 
@@ -536,11 +591,16 @@ TASK-S5-M03 : Écran File d'attente donneur (S-15)
   - Position dans la file (#X)
   - Info box "La famille sera notifiée"
   - Bouton "Annuler ma participation" (rouge ghost)
+    → Reste visible et actif même après passage en status "validated"
+    (tant que le don n'est pas confirmé par la famille). L'écran affiche
+    alors un texte adapté : "Vous avez été sélectionné — vous pouvez
+    toujours annuler si besoin avant le don."
 
 TASK-S5-M04 : Écran Navigation vers l'hôpital (S-16)
   - Map plein écran avec itinéraire (React Native Maps)
   - Info strip : hôpital + ETA
   - Bottom sheet : adresse + bouton "Appeler la famille"
+    → Deep link natif tel: (hook useNativeCall, même logique que partout ailleurs)
 
 TASK-S5-M05 : Écran Confirmation don + récompense (S-17)
   - Checkmark animé vert (Reanimated 4)
@@ -671,12 +731,19 @@ TASK-S7-M01 : Écran Chat (S-18)
   - Indicateur "lu" (double check)
   - Indicateur de frappe "..."
   - Header : nom + bouton appel téléphonique
+    → Deep link natif : Linking.openURL(`tel:${phoneNumber}`)
+    Ouvre l'application Téléphone native du système (pas d'écran in-app SAUVI)
   - Banner lecture seule si SOS clôturé
 
-TASK-S7-M02 : Écran Appel sortant (S-19)
-  - Numéro masqué (06•• ••• •••)
-  - Bouton raccrocher
-  - Durée appel
+TASK-S7-M02 : Hook useNativeCall.ts
+  - call(phoneNumber: string) → Linking.openURL(`tel:${phoneNumber}`)
+  - Gestion erreur si Linking.canOpenURL renvoie false (simulateur, web)
+  - Utilisé par TOUS les boutons d'appel de l'app (Chat S-18, Dashboard SOS S-12
+    tab Validés, Navigation hôpital S-16) — un seul hook centralisé,
+    pas d'écran d'appel custom in-app
+  - NOTE : ce hook est en réalité nécessaire dès le Sprint 5 (S-12 tab Validés
+    et S-16 bouton "Appeler la famille") — à créer en avance si besoin,
+    sa version finale aboutie reste prévue ici en Sprint 7 avec le chat
 
 TASK-S7-M03 : Hook useChat.ts
   - Connexion Socket.io canal chat
@@ -698,15 +765,9 @@ SCEN-FLYER-01 : Partager sur WhatsApp
   WHEN la famille génère et partage le flyer
   THEN une image PNG est générée localement via react-native-view-shot
        ET expo-sharing ouvre la feuille de partage native
-       ET l'image contient : logo SAUVI, "A+" en grand, hôpital, QR code
+       ET l'image contient : logo SAUVI, "A+" en grand, hôpital, ville, priorité
 
-SCEN-FLYER-02 : QR code fonctionnel
-  GIVEN un flyer partagé sur WhatsApp
-  WHEN un destinataire scanne le QR code
-  THEN il est redirigé vers le deep link de l'alerte dans l'app
-       OU vers la page de téléchargement si l'app n'est pas installée
-
-SCEN-FLYER-03 : WhatsApp non installé
+SCEN-FLYER-02 : WhatsApp non installé
   GIVEN un téléphone sans WhatsApp
   WHEN la famille essaie de partager
   THEN la feuille de partage native iOS/Android s'ouvre
@@ -718,8 +779,8 @@ SCEN-FLYER-03 : WhatsApp non installé
 ```
 TASK-S8-M01 : Composant <SosFlyer /> (components/sos/)
   - Design fidèle au Design System SAUVI
-  - Props : bloodType, unitsNeeded, priority, hospitalName, sosId
-  - QR code via react-native-qrcode-svg
+  - Props : bloodType, unitsNeeded, priority, hospitalName, city
+  - Pas de QR code — visuel épuré logo + infos + lien texte de téléchargement
 
 TASK-S8-M02 : Hook useFlyer.ts
   - captureFlyer(ref) → uri PNG via react-native-view-shot
@@ -743,9 +804,8 @@ TASK-S9-B01 : GET /sos/nearby?city=Douala
   Retourne les SOS actifs de la ville, triés par priorité puis date
 
 TASK-S9-M01 : Écran Explorer (S-08)
-  - Carte React Native Maps avec pins SOS actifs
   - Filtres chips par groupe sanguin
-  - Liste SOS actifs en dessous de la carte
+  - Liste SOS actifs 
   - Bouton de partage sur chaque card SOS de la liste :
     → expo-sharing : partage un lien deep link + texte descriptif du SOS
     → format : "🩸 Besoin urgent de [groupe] à [hôpital] — [ville]. Téléchargez SAUVI : [lien]"

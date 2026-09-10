@@ -235,13 +235,14 @@ SCEN-ELIG-03 : Profil affiche historique dons ET historique SOS lancés
 SCEN-CHAT-01 : Famille envoie un message au donneur validé
 SCEN-CHAT-02 : Message non envoyé (offline) → indicateur + retry
 SCEN-CHAT-03 : Chat en lecture seule après clôture SOS
-SCEN-CHAT-04 : Appel direct depuis le chat → numéro masqué
+SCEN-CHAT-04 : Appel direct depuis le chat → deep link natif tel: (app Téléphone système)
 ```
 
 - [ ] NestJS Gateway Socket.io : `message:send`, `message:read`
 - [ ] `GET /sos/:id/messages` — historique messages
 - [ ] Écran chat intégré (S-18)
-- [ ] Écran appel sortant (S-19)
+- [ ] Hook `useNativeCall` centralisé (Linking.openURL `tel:`) — réutilisé
+      partout où un bouton d'appel existe (chat, dashboard SOS tab Validés)
 - [ ] Notifications push pour nouveaux messages
 
 ---
@@ -251,14 +252,12 @@ SCEN-CHAT-04 : Appel direct depuis le chat → numéro masqué
 **Scénarios :**
 ```
 SCEN-FLYER-01 : Famille génère un flyer et le partage sur WhatsApp
-SCEN-FLYER-02 : Flyer contient QR code fonctionnel vers l'alerte
-SCEN-FLYER-03 : WhatsApp absent → partage texte simple proposé
+SCEN-FLYER-02 : WhatsApp absent → partage texte simple proposé
 ```
 
 - [ ] Composant `<SosFlyer />` React Native fidèle au Design System
 - [ ] Intégration `react-native-view-shot` (capture PNG)
 - [ ] Intégration `expo-sharing` (partage natif)
-- [ ] QR code dans le flyer (`react-native-qrcode-svg`)
 - [ ] Écran générateur (S-13)
 
 ---

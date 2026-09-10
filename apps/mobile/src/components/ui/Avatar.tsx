@@ -1,4 +1,6 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { memo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { borderRadius, colors, typography } from '../../constants/theme';
 
@@ -29,7 +31,11 @@ function getInitials(name: string): string {
   return `${first}${last}`.toUpperCase();
 }
 
-export function Avatar({ name, imageUrl, size = 'md' }: AvatarProps): React.JSX.Element {
+export const Avatar = memo(function Avatar({
+  name,
+  imageUrl,
+  size = 'md',
+}: AvatarProps): React.JSX.Element {
   const dimension = sizeMap[size];
   const hasImage = imageUrl !== undefined && imageUrl !== null && imageUrl.length > 0;
 
@@ -37,16 +43,19 @@ export function Avatar({ name, imageUrl, size = 'md' }: AvatarProps): React.JSX.
     <View style={[styles.container, { width: dimension, height: dimension }]}>
       {hasImage ? (
         <Image
-          accessibilityLabel={`Avatar de ${name}`}
           source={{ uri: imageUrl }}
-          style={[styles.image, { width: dimension, height: dimension }]}
+          style={[
+            styles.image,
+            { width: dimension, height: dimension, borderRadius: dimension / 2 },
+          ]}
+          contentFit='cover'
         />
       ) : (
         <Text style={[styles.initials, { fontSize: dimension * 0.35 }]}>{getInitials(name)}</Text>
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

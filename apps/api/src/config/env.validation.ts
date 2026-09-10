@@ -12,16 +12,22 @@ const EnvSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
   GOOGLE_CALLBACK_URL: z.string().url(),
-  CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
-  CLOUDFLARE_R2_ACCESS_KEY: z.string().min(1),
-  CLOUDFLARE_R2_SECRET_KEY: z.string().min(1),
-  CLOUDFLARE_R2_BUCKET_NAME: z.string().min(1),
-  CLOUDFLARE_CDN_URL: z.string().url(),
-  FIREBASE_PROJECT_ID: z.string().min(1),
-  FIREBASE_CLIENT_EMAIL: z.string().email(),
-  FIREBASE_PRIVATE_KEY: z.string().min(1),
-  SENDGRID_API_KEY: z.string().min(1),
-  FROM_EMAIL: z.string().email(),
+  SUPABASE_URL: z.string().url(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  FIREBASE_PROJECT_ID: z.string().default(''),
+  FIREBASE_CLIENT_EMAIL: z.string().default(''),
+  FIREBASE_PRIVATE_KEY: z.string().default(''),
+  // Fournisseur email : 'gmail' | 'brevo' | 'resend' | 'dev'
+  MAIL_PROVIDER: z.enum(['gmail', 'brevo', 'resend', 'dev']).default('dev'),
+  FROM_EMAIL: z.string().default('sauvi.notifications@gmail.com'),
+  // Gmail SMTP (App Password)
+  GMAIL_USER: z.string().default(''),
+  GMAIL_APP_PASSWORD: z.string().default(''),
+  // Brevo SMTP
+  BREVO_SMTP_USER: z.string().default(''),
+  BREVO_SMTP_KEY: z.string().default(''),
+  // Resend API (optionnel)
+  RESEND_API_KEY: z.string().default(''),
   FRONTEND_URL: z.string().min(1),
 });
 

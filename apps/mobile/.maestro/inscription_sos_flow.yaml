@@ -1,0 +1,111 @@
+appId: com.sauvi.app
+---
+# Test E2E : Flux Inscription → Lancer SOS → Clôturer
+# Mis à jour : priorité par défaut = Préventif, libellés boutons actualisés
+- launchApp
+- clearState
+
+# --- Onboarding ---
+- runFlow:
+    when:
+      visible: "Passer"
+    commands:
+      - tapOn: "Passer"
+
+# --- Login -> Inscription ---
+- tapOn: "S'inscrire"
+
+# Étape 1 : Nom, Email, Mot de passe
+- tapOn: "ATANGANA Marc"
+- inputText: "Test Maestro"
+
+- tapOn: "email@exemple.com"
+- inputText: "maestro@test.com"
+
+- tapOn: "••••••••"
+- inputText: "TestPass123!"
+
+- tapOn: "J'accepte les conditions d'utilisation et la politique de confidentialité"
+- tapOn: "Continuer"
+
+# Étape 2 : Groupe sanguin, Genre, Date, Ville, Téléphone
+- tapOn: "Masculin"
+- tapOn: "A+"
+
+# Pour le datepicker, c'est parfois complexe. On va simplement simuler un appui si possible
+# ou s'en remettre au fait que la date par défaut (01/01/2000) fonctionne si on appuie juste sur le champ puis "OK" ou en cliquant en dehors
+- tapOn: "JJ/MM/AAAA"
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+
+- runFlow:
+    when:
+      visible: "Done"
+    commands:
+      - tapOn: "Done"
+
+- tapOn: "Ex: Douala"
+- inputText: "Douala"
+- tapOn: "Douala"
+
+- tapOn: "6XX XXX XXX"
+- inputText: "690000000"
+
+- tapOn: "Créer mon compte"
+
+# --- Vérifier arrivée sur l'accueil ---
+- extendedWaitUntil:
+    visible: "Bonjour Test Maestro"
+    timeout: 10000
+
+# --- Lancer un SOS ---
+- tapOn: "SOS"
+
+# Étape 1 : Sélection groupe + poches + priorité
+# NOTE: La priorité par défaut est maintenant "Préventif".
+# On sélectionne "Urgence vitale" uniquement si on veut tester ce cas précis.
+# Pour tester le flow standard avec Préventif (défaut), ne pas taper sur la priorité.
+- tapOn: "A+"
+# La priorité "Préventif" est déjà sélectionnée par défaut → pas besoin de la tapper
+- tapOn: "Suivant"
+
+# Étape 2 : Localisation
+- extendedWaitUntil:
+    visible: "Confirmer la localisation"
+    timeout: 10000
+- tapOn: "Confirmer la localisation"
+
+# Étape 3 : Confirmation
+# Le bouton s'appelle désormais "Diffuser le SOS maintenant"
+- extendedWaitUntil:
+    visible: "Diffuser le SOS maintenant"
+    timeout: 5000
+- tapOn: "Diffuser le SOS maintenant"
+
+# Vérifier succès → badge "SOS ACTIF" visible dans le dashboard
+- extendedWaitUntil:
+    visible: "SOS ACTIF"
+    timeout: 10000
+
+# --- Clôturer le SOS ---
+# Le bouton de clôture s'appelle désormais "Clôturer le SOS"
+- runFlow:
+    when:
+      visible: "Clôturer le SOS"
+    commands:
+      - tapOn: "Clôturer le SOS"
+      # Confirmer la boîte de dialogue native
+      - runFlow:
+          when:
+            visible: "Clôturer"
+          commands:
+            - tapOn: "Clôturer"
+
+- runFlow:
+    when:
+      visible: "Se déconnecter"
+    commands:
+      - tapOn: "Se déconnecter"
