@@ -2,6 +2,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { BloodType, SosStatus } from '@prisma/client';
+import { DonorsGateway } from '../donors/donors.gateway';
 import { BloodCompatibilityService } from '../eligibility/blood-compatibility.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -52,6 +53,10 @@ describe('SosService', () => {
         findMany: jest.fn(),
         count: jest.fn().mockResolvedValue(1),
       },
+      donorWaitlist: {
+        count: jest.fn().mockResolvedValue(0),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
     } as unknown as jest.Mocked<PrismaService>;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -71,6 +76,13 @@ describe('SosService', () => {
           useValue: {
             get: jest.fn().mockResolvedValue(null),
             set: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: DonorsGateway,
+          useValue: {
+            emitWaitlistUpdate: jest.fn(),
+            emitSosClosed: jest.fn(),
           },
         },
         BloodCompatibilityService,
@@ -104,6 +116,7 @@ describe('SosService', () => {
           latitude: 4.0511,
           longitude: 9.7679,
           city: 'Douala',
+          expiresAt: expect.any(Date),
         },
         select: expect.any(Object),
       });
@@ -151,7 +164,7 @@ describe('SosService', () => {
         where: { id: 'sos-1' },
         select: expect.any(Object),
       });
-      expect(result.data).toEqual(mockSos);
+      expect(result.data).toEqual({ ...mockSos, waitlistCount: 0 });
     });
 
     it('should throw NotFoundException when SOS does not exist', async () => {
@@ -209,7 +222,11 @@ describe('SosService', () => {
       const result = await service.getNearby('Douala');
 
       expect(prismaService.sosAlert.findMany).toHaveBeenCalledWith({
-        where: { city: 'Douala', status: SosStatus.active },
+        where: {
+          city: 'Douala',
+          status: SosStatus.active,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: expect.any(Date) } }],
+        },
         orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
         select: expect.any(Object),
         skip: 0,

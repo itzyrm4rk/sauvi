@@ -6,6 +6,7 @@ import { BloodType, NotificationType, SosStatus } from '@prisma/client';
 import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import type { App } from 'supertest/types';
+import { DonorsGateway } from '../donors/donors.gateway';
 import { BloodCompatibilityService } from '../eligibility/blood-compatibility.service';
 import { FcmService } from '../notifications/fcm.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -75,11 +76,17 @@ describe('SosController integration', () => {
       inAppNotification: {
         createMany: jest.fn().mockResolvedValue({ count: 2 }),
       },
+      donorWaitlist: {
+        count: jest.fn().mockResolvedValue(0),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
     } as unknown as jest.Mocked<PrismaService>;
 
     const mockFcm = {
       sendToDevice: jest.fn(),
-      sendToMany: jest.fn().mockResolvedValue({ successCount: 1, failureCount: 0 }),
+      sendToMany: jest
+        .fn()
+        .mockResolvedValue({ successCount: 1, failureCount: 0, staleTokens: [] }),
     } as unknown as jest.Mocked<FcmService>;
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -91,6 +98,13 @@ describe('SosController integration', () => {
         TestUserMiddleware,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: FcmService, useValue: mockFcm },
+        {
+          provide: DonorsGateway,
+          useValue: {
+            emitWaitlistUpdate: jest.fn(),
+            emitSosClosed: jest.fn(),
+          },
+        },
         {
           provide: CACHE_MANAGER,
           useValue: {

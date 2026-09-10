@@ -109,7 +109,7 @@ export class NotificationsService {
     });
 
     // Purger automatiquement les tokens FCM périmés de la BDD
-    if (fcmResult.staleTokens.length > 0) {
+    if (fcmResult?.staleTokens && fcmResult.staleTokens.length > 0) {
       await this.prisma.user.updateMany({
         where: { fcmToken: { in: fcmResult.staleTokens } },
         data: { fcmToken: null },
