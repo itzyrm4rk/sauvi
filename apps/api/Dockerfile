@@ -6,8 +6,8 @@ WORKDIR /app
 # Installation des outils système nécessaires (OpenSSL pour Prisma)
 RUN apk add --no-cache openssl libc6-compat
 
-# Copie des fichiers racine pour la résolution des workspaces
-COPY package.json package-lock.json turbo.json ./
+# Copie des fichiers racine pour la résolution des workspaces et TypeScript
+COPY package.json package-lock.json turbo.json tsconfig.json ./
 COPY packages/shared ./packages/shared
 COPY apps/api/package.json ./apps/api/package.json
 
