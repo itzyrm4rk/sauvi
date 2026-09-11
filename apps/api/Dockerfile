@@ -18,6 +18,9 @@ RUN npm ci --workspace=apps/api --workspace=packages/shared --include-workspace-
 COPY apps/api ./apps/api
 COPY packages ./packages
 
+# Compilation du package partagé @sauvi/shared
+RUN npm run build --workspace=@sauvi/shared
+
 # Génération du client Prisma
 RUN cd apps/api && npx prisma generate
 
