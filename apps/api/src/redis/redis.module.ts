@@ -1,6 +1,6 @@
 import { createKeyv } from '@keyv/redis';
 import { CacheModule } from '@nestjs/cache-manager';
-import { Global, Module } from '@nestjs/common';
+import { Global, Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { redisConfig } from '../config/redis.config';
@@ -29,7 +29,14 @@ import { RedisService } from './redis.service';
       inject: [ConfigService],
       useFactory: (configService: ConfigService): Redis => {
         const redisUrl = configService.get<string>('redis.REDIS_URL');
-        return new Redis(redisUrl ?? 'redis://localhost:6379');
+        const client = new Redis(redisUrl ?? 'redis://localhost:6379', {
+          maxRetriesPerRequest: null,
+          enableReadyCheck: false,
+        });
+        client.on('error', (err) => {
+          new Logger('RedisClient').warn(`Redis connection error: ${err.message}`);
+        });
+        return client;
       },
     },
     RedisService,

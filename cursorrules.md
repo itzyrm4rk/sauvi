@@ -20,8 +20,6 @@ Chaque utilisateur a un profil unifié — il peut lancer un SOS ET répondre à
 - Google OAuth 2.0 via @nestjs/passport
 - Firebase Admin SDK (FCM push notifications)
 - Zod pour validation runtime des DTOs
-- Sharp pour conversion images WebP (avatars uniquement)
-- AWS SDK S3-compatible pour Cloudflare R2 (CDN avatars)
 - @nestjs/schedule pour les crons (rappels carence)
 - @nestjs/throttler pour le rate limiting
 - Swagger (@nestjs/swagger) pour la documentation API
@@ -50,7 +48,6 @@ Chaque utilisateur a un profil unifié — il peut lancer un SOS ET répondre à
 - React Native Screens ~4.16.0
 - react-native-view-shot ^4.0.0 (capture flyer en PNG)
 - expo-sharing ~13.0.0 (partage natif iOS/Android)
-- react-native-qrcode-svg ^6.3.0 (QR code dans le flyer)
 - react-native-svg ~15.11.0
 - Socket.io client ^4.8.0 (WebSocket temps réel)
 - Zod ^3.24.0 (validation formulaires)
@@ -160,6 +157,21 @@ export const COOLDOWN_DAYS: Record<string, number> = {
 };
 ```
 
+## Villes couvertes (packages/shared/src/constants/cities.ts)
+
+SAUVI couvre une liste FERMÉE de 9 villes du Cameroun. Tout champ ville
+(inscription S-04, création SOS S-10) doit utiliser l'autocomplétion sur
+cette liste exacte — jamais de saisie libre non contrainte.
+
+```typescript
+export const CAMEROON_CITIES = [
+  'Yaoundé', 'Douala', 'Garoua', 'Bamenda', 'Bafoussam',
+  'Bertoua', 'Ebolowa', 'Ngaoundéré', 'Buea',
+] as const;
+
+export type City = (typeof CAMEROON_CITIES)[number];
+```
+
 ## Structure des réponses API
 
 Toujours respecter ce format de réponse :
@@ -190,22 +202,46 @@ Toujours respecter ce format de réponse :
 ## Contexte métier important
 
 - Un utilisateur ne peut avoir qu'1 SOS actif à la fois
-- Les notifications push sont filtrées par : compatibilité ABO/Rhésus + ville + is_eligible
+- **Notifications PUSH FCM — TOKEN DIRECT uniquement, pas de Topic.** Le filtrage
+  (compatibilité ABO/Rhésus + ville + is_eligible) est fait en SQL via Prisma
+  AVANT l'envoi, puis multicast sur les tokens FCM individuels résultants.
+  Les Topics FCM ne sont pas utilisés : ils ne permettent pas de filtrage
+  dynamique multi-critères (l'éligibilité change quotidiennement par cron,
+  la compatibilité ABO dépend du groupe demandé à chaque SOS).
+- **Notification IN-APP pour les utilisateurs non concernés.** Tout utilisateur
+  incompatible, en carence, ou d'une autre ville reçoit une notification
+  in-app (stockée en DB, PAS de push) visible dans le centre de notifications
+  (S-07), avec un bouton de partage pour relayer l'alerte sur ses réseaux.
 - Le chat entre famille et donneur n'est accessible qu'après validation du donneur
 - Après clôture d'un SOS, le chat passe en lecture seule
+- **C'est TOUJOURS la famille (demandeur) qui confirme qu'un don a eu lieu**
+  (PATCH status "donated"), jamais le donneur lui-même.
+- **Un donneur peut annuler sa participation à tout moment** tant que le don
+  n'est pas confirmé — que son statut soit "waiting" OU "validated".
+  L'annulation devient impossible uniquement une fois status "donated".
+- **Tous les boutons d'appel utilisent le deep link natif** `tel:` via
+  `Linking.openURL` (hook `useNativeCall` centralisé). Aucun écran d'appel
+  custom in-app (pas de numéro masqué, pas de minuteur maison) — l'app
+  Téléphone native du système s'ouvre directement.
+- Le dashboard SOS actif (S-12), tab "Validés", expose un bouton Appeler
+  (deep link natif) et un bouton Chat sur chaque donneur validé.
+- Pas de QR code dans le flyer — partage texte + image uniquement.
 - La génération du flyer se fait côté mobile (react-native-view-shot), pas côté serveur
-- Les avatars sont uploadés sur Cloudflare R2 via NestJS (conversion WebP avec sharp)
+- - Les avatars sont uploadés dans Supabase Storage (bucket "avatars", accès public)
+  via NestJS (@supabase/supabase-js). URL publique CDN stockée dans users.avatar_url.
+  Pas de conversion manuelle — les transformations d'image (resize, qualité)
+  se font côté CDN Supabase via paramètres d'URL (?width=200&quality=80).
 - Les flyers sont capturés localement et partagés via expo-sharing (pas de stockage serveur)
 
 ## Priorités de développement (ordre des sprints)
 
 1. Auth (JWT + Google OAuth)
 2. Profil unifié
-3. Création SOS + notifications push FCM
-4. Flux donneur (waitlist + validation + carence)
+3. Création SOS + notifications push FCM (token direct) + notifications in-app
+4. Flux donneur (waitlist + validation + annulation flexible + carence)
 5. Temps réel WebSocket
-6. Chat intégré
-7. Générateur flyer (react-native-view-shot)
+6. Chat intégré + appel natif (deep link tel:)
+7. Générateur flyer (react-native-view-shot, sans QR code)
 8. Réputation + badges
-9. Explorer + carte
+9. Explorer + carte + bouton de partage sur les SOS
 10. Animations + polish

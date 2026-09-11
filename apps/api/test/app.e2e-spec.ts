@@ -1,6 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
+import request, { type Response } from 'supertest';
 import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/prisma/prisma.service';
@@ -41,8 +41,10 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/api/health')
       .expect(200)
-      .expect((res) => {
+      .expect((res: Response) => {
         expect(res.body.data.status).toBe('ok');
+        expect(res.body.data.database).toBe('connected');
+        expect(res.body.data.redis).toBe('connected');
       });
   });
 });

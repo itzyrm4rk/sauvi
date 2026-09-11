@@ -1,10 +1,13 @@
+import { memo } from 'react';
 import {
   ActivityIndicator,
   Pressable,
   type PressableProps,
+  type StyleProp,
   StyleSheet,
   Text,
   type TextStyle,
+  View,
   type ViewStyle,
 } from 'react-native';
 
@@ -19,6 +22,9 @@ export interface ButtonProps extends Omit<PressableProps, 'style'> {
   size?: ButtonSize;
   loading?: boolean;
   fullWidth?: boolean;
+  leftIcon?: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 }
 
 const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = {
@@ -55,12 +61,15 @@ const sizeStyles: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> 
   },
 };
 
-export function Button({
+export const Button = memo(function Button({
   label,
   variant = 'primary',
   size = 'md',
   loading = false,
   fullWidth = false,
+  leftIcon,
+  style,
+  textStyle,
   disabled,
   ...pressableProps
 }: ButtonProps): React.JSX.Element {
@@ -78,6 +87,7 @@ export function Button({
         sizeStyle.container,
         variant === 'primary' ? styles.primaryRadius : styles.defaultRadius,
         fullWidth ? styles.fullWidth : undefined,
+        style,
         pressed && !isDisabled ? styles.pressed : undefined,
         isDisabled ? styles.disabled : undefined,
       ]}
@@ -86,11 +96,14 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={variantStyle.text.color as string} />
       ) : (
-        <Text style={[styles.label, variantStyle.text, sizeStyle.text]}>{label}</Text>
+        <View style={styles.contentContainer}>
+          {leftIcon && <View style={styles.leftIconContainer}>{leftIcon}</View>}
+          <Text style={[styles.label, variantStyle.text, sizeStyle.text, textStyle]}>{label}</Text>
+        </View>
       )}
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   base: {
@@ -106,6 +119,14 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     width: '100%',
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leftIconContainer: {
+    marginRight: spacing.sm,
   },
   label: {
     fontFamily: typography.fontFamily.semibold,

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "566364371213",
+    "project_id": "sauvi-app",
+    "storage_bucket": "sauvi-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:566364371213:android:0e57ae50754eab87599844",
+        "android_client_info": {
+          "package_name": "app.sauvi.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhjKaSFiUAPnVh2W5V1qH7WVCcBeb68rU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

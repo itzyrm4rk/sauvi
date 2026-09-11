@@ -7,7 +7,7 @@ export function SosPlaceholderScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>SOS Urgence</Text>
-      <Text style={styles.description}>Lancer une alerte de don de sang.</Text>
+      <Text style={styles.description}>Diffusser une alerte de don de sang.</Text>
       <Button label='Lancer un SOS' variant='primary' fullWidth />
     </View>
   );

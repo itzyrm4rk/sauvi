@@ -2,7 +2,7 @@ export type BloodType = 'O-' | 'O+' | 'A-' | 'A+' | 'B-' | 'B+' | 'AB-' | 'AB+';
 
 export type Gender = 'masculin' | 'feminin';
 
-export type BadgeType = 'bronze' | 'argent' | 'or';
+export type BadgeType = 'bronze' | 'argent' | 'or' | 'diamant' | 'legende';
 
 export interface IUser {
   id: string;
@@ -18,4 +18,17 @@ export interface IUser {
   isEligible: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface IAuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface IAuthResponse {
+  data: {
+    user: IUser;
+    tokens: IAuthTokens;
+    profileComplete: boolean;
+  };
 }

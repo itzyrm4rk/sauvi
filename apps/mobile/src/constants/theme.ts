@@ -11,13 +11,17 @@ export const colors = {
   textSecondary: '#888780',
   border: '#D3D1C7',
   white: '#FFFFFF',
+  error: '#D32F2F',
+  surface: '#FFFFFF',
   transparent: 'transparent',
 } as const;
 
 export const typography = {
   fontFamily: {
     regular: 'Inter_400Regular',
+    medium: 'Inter_500Medium',
     semibold: 'Inter_600SemiBold',
+    bold: 'Inter_700Bold',
   },
   fontSize: {
     xs: 12,
@@ -26,6 +30,7 @@ export const typography = {
     lg: 18,
     xl: 22,
     xxl: 28,
+    xxxl: 36,
   },
   lineHeight: {
     xs: 16,
