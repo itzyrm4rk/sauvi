@@ -22,7 +22,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://10.53.199.163:3000/api/",
+        "EXPO_PUBLIC_API_URL": "https://sauvi-1.onrender.com/api",
         "EXPO_PUBLIC_GEOAPIFY_API_KEY": "f2e63bbcaf804443a6b85930d9756913"
       }
     },
@@ -30,7 +30,7 @@
       "autoIncrement": true,
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sauvi-api.onrender.com/api",
+        "EXPO_PUBLIC_API_URL": "https://sauvi-1.onrender.com/api",
         "EXPO_PUBLIC_GEOAPIFY_API_KEY": "f2e63bbcaf804443a6b85930d9756913"
       }
     }
