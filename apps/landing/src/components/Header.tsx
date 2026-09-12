@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { APK_DOWNLOAD_URL } from '../constants/links';
 import { DownloadIcon } from './Icons';
 
 export function Header() {
@@ -57,9 +58,9 @@ export function Header() {
           </nav>
 
           <div className='nav-right'>
-            <a href='#telechargement' className='nav-cta-btn'>
+            <a href={APK_DOWNLOAD_URL} className='nav-cta-btn' download='sauvi.apk'>
               <DownloadIcon size={16} color='#FFFFFF' />
-              <span>Télécharger</span>
+              <span>Télécharger l'APK</span>
             </a>
 
             {/* Hamburger button (mobile only) */}
@@ -132,14 +133,15 @@ export function Header() {
                 </li>
               ))}
             </ul>
-            <button
-              type='button'
+            <a
+              href={APK_DOWNLOAD_URL}
               className='mobile-nav-cta'
-              onClick={() => handleNavClick('#telechargement')}
+              download='sauvi.apk'
+              onClick={() => setMenuOpen(false)}
             >
               <DownloadIcon size={18} color='#FFFFFF' />
               <span>Télécharger l'APK Android</span>
-            </button>
+            </a>
           </aside>
         </div>
       )}

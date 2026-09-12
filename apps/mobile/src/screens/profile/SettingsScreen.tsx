@@ -194,7 +194,7 @@ export function SettingsScreen() {
       await Share.share({
         title: 'SAUVI - Don de sang d’urgence au Cameroun',
         message:
-          'Rejoignez la communauté SAUVI pour donner ou recevoir du sang en cas d’urgence vitale au Cameroun. Ensemble, sauvons des vies ! https://sauvi.app',
+          'Rejoignez la communauté SAUVI pour donner ou recevoir du sang en cas d’urgence vitale au Cameroun. Ensemble, sauvons des vies ! https://sauvi-landing.vercel.app',
       });
     } catch (_e) {
       // Ignorer si annulé

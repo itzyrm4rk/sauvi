@@ -53,7 +53,8 @@ export function useFlyer() {
         await Share.share(
           {
             url: flyerUri,
-            message: "Téléchargez l'application SAUVI et sauvez des vies ! 👉 https://sauvi.app",
+            message:
+              "Téléchargez l'application SAUVI et sauvez des vies ! 👉 https://sauvi-landing.vercel.app",
           },
           { dialogTitle: 'Partager le SOS SAUVI' },
         );

@@ -1,9 +1,10 @@
 'use client';
 
+import { APK_DOWNLOAD_URL } from '../constants/links';
 import { AlertCircleIcon, ClockIcon, DownloadIcon, DropletsIcon, ShieldCheckIcon } from './Icons';
 
 export function Hero() {
-  const apkDownloadUrl = process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL || '/downloads/sauvi-latest.apk';
+  const apkDownloadUrl = APK_DOWNLOAD_URL;
 
   return (
     <section className='hero-section' id='telechargement'>

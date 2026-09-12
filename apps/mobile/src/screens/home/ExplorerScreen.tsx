@@ -108,7 +108,7 @@ export function ExplorerScreen(): React.JSX.Element {
 
   const handleShare = useCallback(async (alert: (typeof alerts)[0]) => {
     const bloodTypeFormatted = formatBloodType(alert.bloodTypeNeeded);
-    const message = `🩸 Besoin urgent de ${bloodTypeFormatted} à ${alert.hospitalName} — ${alert.city}.\n\nTéléchargez SAUVI pour aider : sauvi://sos/${alert.id}`;
+    const message = `🩸 Besoin urgent de ${bloodTypeFormatted} à ${alert.hospitalName} — ${alert.city}.\n\nTéléchargez SAUVI pour aider : https://sauvi-landing.vercel.app/sos/${alert.id}`;
     try {
       await Share.share({ message });
     } catch (_e) {
