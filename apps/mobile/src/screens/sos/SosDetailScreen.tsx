@@ -242,7 +242,7 @@ export function SosDetailScreen(): React.JSX.Element {
     if (!sos) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const bloodType = formatBloodType(sos.bloodTypeNeeded);
-    const message = `🚨 URGENCE SAUVI : Besoin urgent de don de sang ${bloodType} (${sos.unitsNeeded} unité(s)) à ${sos.hospitalName} — ${sos.city}.\n\nRejoignez l'alerte sur SAUVI pour aider : sauvi://sos/${sos.id}`;
+    const message = `🚨 URGENCE SAUVI : Besoin urgent de don de sang ${bloodType} (${sos.unitsNeeded} unité(s)) à ${sos.hospitalName} — ${sos.city}.\n\nRejoignez l'alerte sur SAUVI pour aider : https://sauvi-landing.vercel.app/sos/${sos.id}`;
     try {
       await Share.share({ message });
     } catch (_e) {

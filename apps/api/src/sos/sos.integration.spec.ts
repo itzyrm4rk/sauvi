@@ -175,7 +175,7 @@ describe('SosController integration', () => {
           type: NotificationType.sos_share,
           title: '🚨 Relayer un SOS urgent',
           body: '🚨 URGENCE SAUVI : Besoin urgent de don de sang A+ (2 unité(s)) à Hopital Laquintinie — Douala.',
-          shareUrl: 'sauvi://sos/sos-1',
+          shareUrl: 'https://sauvi-landing.vercel.app/sos/sos-1',
         },
         {
           userId: 'user-ineligible',
@@ -183,7 +183,7 @@ describe('SosController integration', () => {
           type: NotificationType.sos_share,
           title: '🚨 Relayer un SOS urgent',
           body: '🚨 URGENCE SAUVI : Besoin urgent de don de sang A+ (2 unité(s)) à Hopital Laquintinie — Douala.',
-          shareUrl: 'sauvi://sos/sos-1',
+          shareUrl: 'https://sauvi-landing.vercel.app/sos/sos-1',
         },
       ],
     });

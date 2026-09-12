@@ -124,7 +124,7 @@ export class NotificationsService {
           type: NotificationType.sos_match,
           title: '🚨 SOS don de sang compatible',
           body: `${sos.unitsNeeded} poche(s) de sang ${PRISMA_TO_SHARED_BLOOD_TYPE[sos.bloodTypeNeeded]} recherchées à ${sos.hospitalName} (${sos.city})`,
-          shareUrl: `sauvi://sos/${sos.id}`,
+          shareUrl: `https://sauvi-landing.vercel.app/sos/${sos.id}`,
         })),
       });
     }
@@ -142,7 +142,7 @@ export class NotificationsService {
           type: NotificationType.sos_share,
           title: '🚨 Relayer un SOS urgent',
           body: shareBody,
-          shareUrl: `sauvi://sos/${sos.id}`,
+          shareUrl: `https://sauvi-landing.vercel.app/sos/${sos.id}`,
         })),
       });
     }

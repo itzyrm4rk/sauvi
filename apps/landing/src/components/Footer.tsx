@@ -1,5 +1,6 @@
 'use client';
 
+import { APK_DOWNLOAD_URL } from '../constants/links';
 import { WhatsappIcon } from './Icons';
 
 export function Footer() {
@@ -29,7 +30,9 @@ export function Footer() {
               <h4>Navigation</h4>
               <ul>
                 <li>
-                  <a href='#telechargement'>Télécharger l'APK</a>
+                  <a href={APK_DOWNLOAD_URL} download='sauvi.apk'>
+                    Télécharger l'APK
+                  </a>
                 </li>
                 <li>
                   <a href='#showcase'>Fonctionnalités</a>

@@ -27,7 +27,12 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { RootNavigator } from './RootNavigator';
 
 const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: [Linking.createURL('/'), 'sauvi://', 'https://sauvi.app'],
+  prefixes: [
+    Linking.createURL('/'),
+    'sauvi://',
+    'https://sauvi.app',
+    'https://sauvi-landing.vercel.app',
+  ],
   config: {
     screens: {
       MainTabs: {
