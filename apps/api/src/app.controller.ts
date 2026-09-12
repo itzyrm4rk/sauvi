@@ -9,6 +9,18 @@ import { Public } from './common/decorators/public.decorator';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Get()
+  @ApiOperation({ summary: "Accueil et statut de l'API SAUVI" })
+  getRoot() {
+    return {
+      name: 'SAUVI API',
+      status: 'online',
+      version: '1.0.0',
+      docs: '/api/docs',
+      health: '/api/health',
+    };
+  }
+
   @Get('health')
   @ApiOperation({ summary: "Vérifier l'état de santé de l'API" })
   async getHealth(): Promise<{
