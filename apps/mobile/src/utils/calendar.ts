@@ -24,12 +24,39 @@ export async function openNativeCalendar(
   eventDate.setHours(9, 0, 0, 0);
 
   if (Platform.OS === 'android') {
-    // ── Méthode 1 : Google Calendar URL (formulaire pré-rempli, bouton Enregistrer visible) ──
+    const startTime = eventDate.getTime();
+    const endTime = startTime + 60 * 60 * 1000;
+
+    // ── Méthode 1 : Intent Android natif INSERT (Ouvre l'application Agenda par défaut du téléphone : Samsung, Xiaomi, Huawei, etc.) ──
+    const intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir%2Fevent;S.title=${encodeURIComponent(title)};S.description=${encodeURIComponent(description)};l.beginTime=${startTime};l.endTime=${endTime};end`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(intentUrl).catch(() => false);
+      if (canOpen) {
+        await Linking.openURL(intentUrl);
+        return;
+      }
+      // Tentative directe même si canOpenURL renvoie false (car canOpenURL bloque parfois les URI intent)
+      await Linking.openURL(intentUrl);
+      return;
+    } catch {
+      // Continuer vers fallback calendrier système
+    }
+
+    // ── Méthode 2 : Ouvrir l'agenda natif directement à la date ──
+    const calDateUrl = `content://com.android.calendar/time/${startTime}`;
+    try {
+      await Linking.openURL(calDateUrl);
+      return;
+    } catch {
+      // Continuer vers fallback Web
+    }
+
+    // ── Méthode 3 (Secours) : Google Calendar Web si aucune app calendrier locale ne répond ──
     const pad = (n: number) => (n < 10 ? `0${n}` : String(n));
     const year = eventDate.getFullYear();
     const month = pad(eventDate.getMonth() + 1);
     const day = pad(eventDate.getDate());
-    // Format attendu par Google Calendar : YYYYMMDDTHHmmssZ
     const dtStart = `${year}${month}${day}T090000`;
     const dtEnd = `${year}${month}${day}T100000`;
 
@@ -42,33 +69,14 @@ export async function openNativeCalendar(
         return;
       }
     } catch {
-      // Continuer vers fallback
+      // Ignorer
     }
 
-    // ── Méthode 2 : Intent Android natif INSERT (Samsung, MIUI, AOSP Calendar…) ──
-    const startTime = eventDate.getTime();
-    const endTime = startTime + 60 * 60 * 1000;
-    const intentUrl = `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir%2Fevent;S.title=${encodeURIComponent(title)};S.description=${encodeURIComponent(description)};l.beginTime=${startTime};l.endTime=${endTime};end`;
-
-    try {
-      await Linking.openURL(intentUrl);
-      return;
-    } catch {
-      // Continuer vers fallback
-    }
-
-    // ── Méthode 3 : Ouvrir l'agenda directement à la date ──
-    const calDateUrl = `content://com.android.calendar/time/${eventDate.getTime()}`;
-    try {
-      await Linking.openURL(calDateUrl);
-      return;
-    } catch {
-      Toast.show({
-        type: 'info',
-        text1: 'Calendrier',
-        text2: "Aucune application Agenda n'a pu être ouverte sur cet appareil.",
-      });
-    }
+    Toast.show({
+      type: 'info',
+      text1: 'Calendrier',
+      text2: "Aucune application Agenda n'a pu être ouverte sur cet appareil.",
+    });
   } else {
     // ── iOS : fichier .ics intercepté nativement par Apple Calendar ──
     try {

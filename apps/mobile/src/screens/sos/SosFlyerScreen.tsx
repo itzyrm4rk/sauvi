@@ -1,8 +1,9 @@
 import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Share2 } from 'lucide-react-native';
+import { ChevronLeft, Link as LinkIcon, Share2 } from 'lucide-react-native';
 import {
   ActivityIndicator,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -75,9 +76,24 @@ export function SosFlyerScreen() {
           ) : (
             <>
               <Share2 size={20} color={colors.white} style={{ marginRight: spacing.sm }} />
-              <Text style={styles.shareText}>Partager le flyer</Text>
+              <Text style={styles.shareText}>Partager le flyer (Image)</Text>
             </>
           )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.linkButton]}
+          onPress={async () => {
+            const shareUrl = `https://sauvi-landing.vercel.app/sos/${sosId}`;
+            await Share.share({
+              title: `Urgence Don de sang ${sosData.bloodTypeNeeded}`,
+              message: `🚨 URGENCE VITALE SAUVI : Besoin urgent de ${sosData.unitsNeeded} unité(s) de sang ${sosData.bloodTypeNeeded} à ${sosData.hospitalName} (${sosData.city}).\n\nAidez-nous ou partagez : ${shareUrl}`,
+              url: shareUrl,
+            });
+          }}
+        >
+          <LinkIcon size={18} color={colors.primary} style={{ marginRight: spacing.sm }} />
+          <Text style={styles.linkText}>Partager le lien avec message</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -146,5 +162,16 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontFamily: typography.fontFamily.semibold,
     fontSize: 16,
+  },
+  linkButton: {
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    marginBottom: 0,
+  },
+  linkText: {
+    color: colors.primary,
+    fontFamily: typography.fontFamily.semibold,
+    fontSize: 15,
   },
 });

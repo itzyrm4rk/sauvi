@@ -58,6 +58,9 @@ export const SosFlyer = forwardRef<View, SosFlyerProps>(
         <View style={styles.ctaSection}>
           <Text style={styles.ctaText}>Téléchargez l'application SAUVI</Text>
           <Text style={styles.ctaSubtext}>et aidez à sauver des vies</Text>
+          <View style={styles.ctaBadge}>
+            <Text style={styles.ctaUrl}>sauvi-landing.vercel.app</Text>
+          </View>
         </View>
 
         {/* Footer */}
@@ -166,6 +169,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  ctaBadge: {
+    marginTop: spacing.sm,
+    backgroundColor: 'rgba(226, 75, 74, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(226, 75, 74, 0.25)',
+    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.md,
+  },
+  ctaUrl: {
+    fontFamily: typography.fontFamily.bold,
+    fontSize: 13,
+    color: colors.primary,
+    letterSpacing: 0.5,
   },
   footer: {
     backgroundColor: colors.primary,

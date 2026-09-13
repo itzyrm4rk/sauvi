@@ -45,6 +45,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       }
     }
 
+    if (
+      status === HttpStatus.TOO_MANY_REQUESTS ||
+      message.includes('ThrottlerException') ||
+      message.includes('Too many requests')
+    ) {
+      message =
+        'Trop de tentatives consécutives. Veuillez patienter quelques instants avant de réessayer.';
+    }
+
     const code = this.mapStatusToCode(status);
 
     const body: ErrorResponse = {
