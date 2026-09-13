@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { WaitlistStatus } from '@prisma/client';
+import { NotificationType, WaitlistStatus } from '@prisma/client';
 import { FcmService } from '../notifications/fcm.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -50,30 +50,50 @@ export class ChatService {
     const roomId = [senderId, receiverId].sort().join('_');
     this.chatGateway.emitNewMessage(sosId, roomId, message);
 
-    // Mute intelligent : Si le destinataire est déjà actif dans la room de chat WebSocket,
-    // on ne lui envoie pas de notification push FCM pour ne pas faire vibrer son téléphone inutilement.
-    const isReceiverInRoom = this.chatGateway.isUserInChatRoom(sosId, roomId, receiverId);
+    const senderName = message.sender?.name || 'Nouveau message';
+    const senderPhone = message.sender?.phone || '';
+    const preview = content.length > 80 ? `${content.substring(0, 77)}...` : content;
 
-    if (!isReceiverInRoom) {
-      const receiver = await this.prisma.user.findUnique({
-        where: { id: receiverId },
-        select: { fcmToken: true },
-      });
-      if (receiver?.fcmToken) {
-        const senderName = message.sender?.name || 'Nouveau message';
-        const senderPhone = message.sender?.phone || '';
-        const preview = content.length > 80 ? `${content.substring(0, 77)}...` : content;
-        await this.fcmService.sendToDevice(receiver.fcmToken, {
+    // 1. Notification In-App enregistrée en BDD pour le destinataire (consultable dans l'historique et la cloche)
+    try {
+      await this.prisma.inAppNotification.create({
+        data: {
+          userId: receiverId,
+          sosId,
+          type: NotificationType.chat_message,
           title: `Message de ${senderName}`,
           body: preview,
-          channelId: 'sauvi-chat-channel',
-          data: {
-            type: 'chat_message',
-            sosId,
-            senderId,
-            contactName: senderName,
-            contactPhone: senderPhone,
-          },
+          shareUrl: senderId,
+        },
+      });
+    } catch (err) {
+      console.error('Erreur création InAppNotification chat:', err);
+    }
+
+    // 2. Notification Push FCM systématique pour avertir le destinataire (écran verrouillé ou appli en arrière-plan)
+    const receiver = await this.prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { fcmToken: true },
+    });
+
+    if (receiver?.fcmToken) {
+      const fcmResult = await this.fcmService.sendToDevice(receiver.fcmToken, {
+        title: `Message de ${senderName}`,
+        body: preview,
+        channelId: 'sauvi-chat-channel',
+        data: {
+          type: 'chat_message',
+          sosId,
+          senderId,
+          contactName: senderName,
+          contactPhone: senderPhone,
+        },
+      });
+
+      if (fcmResult?.staleTokens && fcmResult.staleTokens.length > 0) {
+        await this.prisma.user.update({
+          where: { id: receiverId },
+          data: { fcmToken: null },
         });
       }
     }

@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SAUVI',
+  title: 'SAUVI — Don de sang d’urgence',
   description:
-    'Connectez instantanément les donneurs de sang compatibles aux hôpitaux et aux familles en détresse. Téléchargez l’APK Android officiel.',
+    "Connecte instantanément les donneurs de sang compatibles et éligibles aux personnes en détresse.\nTéléchargez l'APK Android officiel.",
   keywords: [
     'don de sang',
     'urgence médicale',
@@ -14,6 +14,21 @@ export const metadata: Metadata = {
     'santé',
   ],
   authors: [{ name: 'Marc Didier' }],
+  openGraph: {
+    title: 'SAUVI — Don de sang d’urgence',
+    description:
+      "Connecte instantanément les donneurs de sang compatibles et éligibles aux personnes en détresse.\nTéléchargez l'APK Android officiel.",
+    url: 'https://sauvi-landing.vercel.app',
+    siteName: 'SAUVI',
+    locale: 'fr_FR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SAUVI — Don de sang d’urgence',
+    description:
+      "Connecte instantanément les donneurs de sang compatibles et éligibles aux personnes en détresse.\nTéléchargez l'APK Android officiel.",
+  },
 };
 
 export const viewport: Viewport = {

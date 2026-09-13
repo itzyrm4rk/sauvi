@@ -182,10 +182,14 @@ export function NotificationsScreen(): React.JSX.Element {
 
     // Message de chat
     if (notif.type === 'chat_message' && notif.sosId) {
+      const contactId = notif.shareUrl || '';
+      const contactName = notif.title
+        ? notif.title.replace('Message de ', '').trim()
+        : 'Discussion';
       navigation.navigate('Chat', {
         sosId: notif.sosId,
-        contactId: '',
-        contactName: 'Discussion',
+        contactId,
+        contactName,
       });
       return;
     }

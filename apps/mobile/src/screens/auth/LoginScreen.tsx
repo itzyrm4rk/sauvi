@@ -56,18 +56,30 @@ export function LoginScreen({ navigation }: Props): React.JSX.Element {
         status?: number | string;
         data?: { error?: { message?: string } };
       };
+      let title = 'Erreur de connexion';
       let message = 'Identifiants incorrects ou problème réseau.';
-      if (apiErr?.status === 401 || apiErr?.data?.error?.message) {
-        message = apiErr.data?.error?.message ?? 'Email ou mot de passe incorrect.';
+
+      const rawMsg = apiErr?.data?.error?.message || '';
+      const isThrottled =
+        apiErr?.status === 429 ||
+        rawMsg.includes('ThrottlerException') ||
+        rawMsg.includes('Too many requests') ||
+        rawMsg.includes('Trop de tentatives');
+
+      if (isThrottled) {
+        title = 'Trop de tentatives';
+        message = 'Pour votre sécurité, veuillez patienter une minute avant de réessayer.';
+      } else if (apiErr?.status === 401 || rawMsg) {
+        message = rawMsg || 'Email ou mot de passe incorrect.';
       } else if (apiErr?.status === 'FETCH_ERROR') {
-        message = 'Impossible de joindre le serveur. Vérifiez votre connexion Wi-Fi.';
+        message = 'Impossible de joindre le serveur. Vérifiez votre connexion internet.';
       } else if (apiErr?.status === 'PARSING_ERROR') {
-        message =
-          'Réponse inattendue du serveur. Vérifiez que votre téléphone est sur le même Wi-Fi.';
+        message = 'Réponse inattendue du serveur. Veuillez réessayer plus tard.';
       }
+
       Toast.show({
         type: 'error',
-        text1: 'Erreur de connexion',
+        text1: title,
         text2: message,
       });
     }

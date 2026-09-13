@@ -40,7 +40,16 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", "dist", ".expo", "prisma/migrations", "coverage", ".turbo", ".next"]
+    "ignore": [
+      "node_modules",
+      "dist",
+      ".expo",
+      "prisma/migrations",
+      "coverage",
+      ".turbo",
+      ".next",
+      "**/next-env.d.ts"
+    ]
   },
   "overrides": [
     {

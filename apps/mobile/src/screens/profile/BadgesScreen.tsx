@@ -92,8 +92,11 @@ function BadgeTile({
   points: number;
 }) {
   const handleShare = async () => {
+    const landingUrl = 'https://sauvi-landing.vercel.app';
     await Share.share({
-      message: `J'ai obtenu le badge "${badge.label}" sur SAUVI, l'application de dons de sang ! Rejoins-moi sur SAUVI.`,
+      title: `Badge ${badge.label} sur SAUVI`,
+      message: `J'ai obtenu le badge "${badge.label}" sur SAUVI, l'application de dons de sang ! Rejoins-moi pour sauver des vies : ${landingUrl}`,
+      url: landingUrl,
     });
   };
   const scale = useSharedValue(1);
